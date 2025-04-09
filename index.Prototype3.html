@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SPED Kiosk</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      margin-top: 40px;
+    }
+    .menu-btn, #backBtn {
+      background-color: #004a80;
+      color: white;
+      padding: 20px 40px;
+      margin: 15px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 20px;
+      width: 70%;
+      transition: background-color 0.3s ease;
+    }
+    .menu-btn:hover, #backBtn:hover {
+      background-color: #006bb3;
+    }
+    .section {
+      display: none;
+      margin-top: 30px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 80%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 15px;
+      text-align: center;
+    }
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+    #header img {
+      width: 120px;
+    }
+    .voice-feedback {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #28a745;
+      color: white;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    .voice-feedback.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen" class="container">
+    <div id="header">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Department_of_Education.svg/512px-Department_of_Education.svg.png" alt="DepEd Logo">
+      <img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/bf/DepEd_%28Philippines%29_logo.png/640px-DepEd_%28Philippines%29_logo.png" alt="SPED Logo">
+    </div>
+    <button class="menu-btn" onclick="scanQR()">Guardian</button>
+    <button class="menu-btn" onclick="alert('Admin login coming soon.')">Admin</button>
+  </div>
+
+  <div id="mainMenu" class="container" style="display:none;">
+    <button class="menu-btn" onclick="showSection('attendance')">Attendance</button>
+    <button class="menu-btn" onclick="showSection('grades')">Grades</button>
+    <button class="menu-btn" onclick="showSection('schedule')">Schedule</button>
+    <button class="menu-btn" onclick="showSection('subjects')">Subjects</button>
+    <button id="backBtn" onclick="goBack()">Back to Login</button>
+
+    <div id="attendance" class="section">
+      <h3>Attendance Records</h3>
+      <table>
+        <tr><th>Date</th><th>Status</th></tr>
+        <tr><td>April 1</td><td>Present</td></tr>
+        <tr><td>April 2</td><td>Absent</td></tr>
+      </table>
+    </div>
+
+    <div id="grades" class="section">
+      <h3>Grades</h3>
+      <table>
+        <tr><th>Subject</th><th>Grade</th></tr>
+        <tr><td>Math</td><td>90</td></tr>
+        <tr><td>English</td><td>88</td></tr>
+      </table>
+    </div>
+
+    <div id="schedule" class="section">
+      <h3>Schedule</h3>
+      <table>
+        <tr><th>Day</th><th>Activity</th></tr>
+        <tr><td>Monday</td><td>Therapy Session</td></tr>
+        <tr><td>Tuesday</td><td>Science Class</td></tr>
+      </table>
+    </div>
+
+    <div id="subjects" class="section">
+      <h3>Subjects</h3>
+      <table>
+        <tr><th>Subject</th><th>Teacher</th></tr>
+        <tr><td>Science</td><td>Ms. Santos</td></tr>
+        <tr><td>Math</td><td>Mr. Reyes</td></tr>
+        <tr><td>English</td><td>Ms. Cruz</td></tr>
+        <tr><td>Filipino</td><td>Mr. Dela Cruz</td></tr>
+        <tr><td>Therapy</td><td>Ms. Lim</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="voice-feedback hidden" id="voiceFeedback"></div>
+
+  <script>
+    function scanQR() {
+      const studentID = prompt("Scan QR Code (Enter Student ID)");
+      if (studentID === "02000284585") {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("mainMenu").style.display = "block";
+        speak("Login successful. Welcome guardian.");
+        startVoiceRecognition();
+      } else {
+        alert("Invalid QR code.");
+      }
+    }
+
+    function showSection(id) {
+      const sections = document.querySelectorAll(".section");
+      sections.forEach(sec => sec.style.display = "none");
+      document.getElementById(id).style.display = "block";
+      speak(id + " section opened");
+    }
+
+    function speak(text) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      synth.speak(utterance);
+      displayVoiceFeedback(text);
+    }
+
+    function displayVoiceFeedback(text) {
+      const feedback = document.getElementById("voiceFeedback");
+      feedback.textContent = text;
+      feedback.classList.remove("hidden");
+      setTimeout(() => {
+        feedback.classList.add("hidden");
+      }, 3000);
+    }
+
+    function goBack() {
+      document.getElementById("mainMenu").style.display = "none";
+      document.getElementById("loginScreen").style.display = "block";
+      speak("Returned to login screen.");
+    }
+
+    // Voice recognition setup
+    let recognition;
+
+    function startVoiceRecognition() {
+      if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = "en-US";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = function(event) {
+          const command = event.results[0][0].transcript.toLowerCase();
+          handleVoiceCommand(command);
+        };
+
+        recognition.onerror = function(event) {
+          console.error("Error occurred in voice recognition: ", event);
+        };
+
+        recognition.start();
+      } else {
+        alert("Voice recognition not supported in this browser.");
+      }
+    }
+
+    function handleVoiceCommand(command) {
+      const sections = ["attendance", "grades", "schedule", "subjects"];
+      if (sections.includes(command)) {
+        showSection(command);
+      } else if (command === "back") {
+        goBack();
+      } else {
+        speak("Sorry, I didn't understand the command.");
+      }
+    }
+  </script>
+</body>
+</html>
